@@ -4,6 +4,8 @@ from django.contrib.auth.models import AbstractUser
 import secrets
 from django.core.exceptions import ValidationError
 from main.sms import send_sms
+from enum import Enum
+from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 
 
@@ -51,7 +53,6 @@ class CreditHistory(TimeStampedModel):
         User, on_delete=models.PROTECT, null=True, blank=True, related_name="deducted_user")
     credit = models.PositiveSmallIntegerField(default=0)
     reason = models.CharField(max_length=100, null=True)
-    available_date = models.CharField(max_length=1000, null=True)
     appointment = models.ForeignKey(
         "appointment.Appointment", on_delete=models.PROTECT, null=True, blank=True)
 
