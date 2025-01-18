@@ -167,7 +167,7 @@ class AppointmentView(APIView):
                                                  mentee=senior, 
                                                  startdate=start_date, 
                                                  enddate=end_date)
-        serializer = AppointmentSerializer(appointment).data
+        serializer = AppointmentDetailSerializer(appointment).data
         
         return Response(data=serializer, status=status.HTTP_200_OK)
         

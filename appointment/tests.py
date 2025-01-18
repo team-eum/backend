@@ -25,7 +25,7 @@ class UserModelTest(TestCase):
             phone=self.user_data["phone"],
             category=self.user_data["category"],
             role=self.user_data["role"],
-            help_categories=self.user_data["help_categories"],
+            help_categories=self.user_data["category"],
             available_date=self.user_data["available_date"],
             credit=self.user_data["credit"],
         )
