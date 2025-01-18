@@ -4,8 +4,6 @@ from django.contrib.auth.models import AbstractUser
 import secrets
 from django.core.exceptions import ValidationError
 from main.sms import send_sms
-from enum import Enum
-from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 
 
