@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from appointment.models import Appointment
+from user.models import User
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -17,7 +18,17 @@ class AppointmentSerializer(serializers.ModelSerializer):
         depth = 1
 
 
+class MentorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "name",
+        ]
+
+
 class TextSummarySerializer(serializers.ModelSerializer):
+    mentor = MentorSerializer()
 
     class Meta:
         model = Appointment
@@ -26,4 +37,3 @@ class TextSummarySerializer(serializers.ModelSerializer):
             "origin_text",
             "summary"
         ]
-        depth = 1
