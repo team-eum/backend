@@ -182,7 +182,7 @@ CUSTOM_DB_OPTIONS = env.CUSTOM_DB_OPTIONS
 
 # Additional Configurations #
 # Custom Auth Model
-AUTH_USER_MODEL = "user.User"
+# AUTH_USER_MODEL = "user.User"
 
 # Custom Storage Configurations
 if USE_S3:
