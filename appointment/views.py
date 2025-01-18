@@ -154,7 +154,6 @@ class AppointmentView(APIView):
 
         start_date = request.data['start_date']
         end_date = request.data['end_date']
-
          # 프론트에서 보내주는 정보명에 따라 달라짐
         appointment = get_object_or_404(Appointment, id=appoinment_id)
         appointment.objects.update(status="ACCEPTED")
@@ -163,7 +162,6 @@ class AppointmentView(APIView):
         mentor.credit += 1
 
         serializer = AppointmentDetailSerializer(appointment).data
-
         return Response(data=serializer.data, status=status.HTTP_200_OK)
         
 
