@@ -12,11 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
 # - **category (String, Enum) # 직무**
 # - **available_time (String) # 가능한 시간**
 
-        fields = {
+        fields = [
             "name",
             "age",
             "area",
             "phone",
             "category",
             "available_time",
-        }
+        ]
