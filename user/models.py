@@ -33,6 +33,7 @@ class User(AbstractUser):
     category = models.JSONField(default=list, null=True)
     role = models.CharField(max_length=100, null=True, choices=ROLE_CHOICES)
     gender = models.CharField(max_length=10, null=True, choices=GENDER_CHOICES)
+    available_date = models.JSONField(default=list, null=True)
     credit = models.SmallIntegerField(default=5)
 
     def save(self, *args, **kwargs):
