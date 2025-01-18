@@ -53,39 +53,42 @@ class AppointmentView(APIView):
 
     def post(self, request):
         # 자동 매칭
-        user = request.user
-        category = list(request.user.category)  # 멘토든 멘티든 카테고리 얻어와야 함
-        pre_appoint = {}  # 임시 약속 데이터 - {카테고리 : ['멘토', '멘티']}
+        try:
+            user = request.user
+            category = list(request.user.category)  # 멘토든 멘티든 카테고리 얻어와야 함
+            pre_appoint = {}  # 임시 약속 데이터 - {카테고리 : ['멘토', '멘티']}
 
-        if user.role == "junior":  # user 가 주니어인 경우
-            for i in category:
-                seniors = User.objects.filter(role="junior").filter(category__contains=i).all()  # senior 들 받아오기
-                pre_appoint[i] = [user, seniors]
+            if user.role == "junior":  # user 가 주니어인 경우
+                for i in category:
+                    seniors = User.objects.filter(role="junior").filter(category__contains=i).all()  # senior 들 받아오기
+                    pre_appoint[i] = [user, seniors]
 
-            # 시간 맞추기
-            jun_start = datetime.datetime.strptime(i["start"], '%Y-%m-%d %H:%M:%S')
-            jun_end = datetime.datetime.strptime(i["end"], '%Y-%m-%d %H:%M:%S')
+                # 시간 맞추기
+                jun_start = datetime.datetime.strptime(i["start"], '%Y-%m-%d %H:%M:%S')
+                jun_end = datetime.datetime.strptime(i["end"], '%Y-%m-%d %H:%M:%S')
 
-            for i in pre_appoint:
-                for j in pre_appoint[i][1]:
-                    for k in j.available_date:
-                        sen_start = datetime.datetime.strptime(k["start"], '%Y-%m-%d %H:%M:%S')
-                        sen_end = datetime.datetime.strptime(k["end"], '%Y-%m-%d %H:%M:%S')
-                        if jun_start <= sen_start and sen_end <= jun_end:
-                            Appointment.objects.create(mentor=user,
-                                                       mentee=j,
-                                                       start_date=max(jun_start, sen_start),
-                                                       end_date=min(jun_end, sen_end))
+                for i in pre_appoint:
+                    for j in pre_appoint[i][1]:
+                        for k in j.available_date:
+                            sen_start = datetime.datetime.strptime(k["start"], '%Y-%m-%d %H:%M:%S')
+                            sen_end = datetime.datetime.strptime(k["end"], '%Y-%m-%d %H:%M:%S')
+                            if jun_start <= sen_start and sen_end <= jun_end:
+                                Appointment.objects.create(mentor=user,
+                                                           mentee=j,
+                                                           start_date=max(jun_start, sen_start),
+                                                           end_date=min(jun_end, sen_end))
 
-        else:  # user 가 시니어인 경우
-            for i in category:  # 배우고 싶은 필드에 맞는 멘토 필터링
-                juniors = User.objects.filter(role="senior").filter(category__contains=i).all()
-                pre_appoint[i] = [juniors, user]
+            else:  # user 가 시니어인 경우
+                for i in category:  # 배우고 싶은 필드에 맞는 멘토 필터링
+                    juniors = User.objects.filter(role="senior").filter(category__contains=i).all()
+                    pre_appoint[i] = [juniors, user]
 
-            # 시간 맞추기
+                # 시간 맞추기
 
-        # 리스트 형식으로 최종 약속 출력
-        return Response("매칭 완료", status=status.HTTP_200_OK)
+            # 리스트 형식으로 최종 약속 출력
+            return Response("매칭 완료", status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(data={"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AppointmentDetailView(APIView):
@@ -116,10 +119,8 @@ class AppointmentDetailView(APIView):
     def put(self, request, *args, **kwargs):
         try:
             # 약속 [확인]
-            mentor_id = request.data['mentee_id']
+            mentor_id = request.data['mentor_id']
             mentee_id = request.data['mentee_id']
-            start_date = request.data['start_date']
-            end_date = request.data['end_date']
 
             # 프론트에서 보내주는 정보명에 따라 달라짐
             mentor = get_object_or_404(User, id=mentor_id)
@@ -131,8 +132,6 @@ class AppointmentDetailView(APIView):
 
             with transaction.atomic():
                 appointment.status = "ACCEPTED"
-                appointment.start_date = start_date
-                appointment.end_date = end_date
                 appointment.save()
 
                 mentor.credit += 1
