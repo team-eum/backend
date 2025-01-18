@@ -62,8 +62,8 @@ class CustomOpenAI:
                 {
                     "role": "user",
                     "content": f"""
-                    Find appropriate location to discuss, such as cafe, office, etc. in {location}
-                    You have to answer in Korean, only address and name of the place
+                    Find only one appropriate location to discuss, such as cafe, office, etc. in {location}
+                    You have to answer in Korean, the answer contains only address and name of the place
                     """
                 }
             ]
