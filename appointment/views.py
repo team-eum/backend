@@ -1,12 +1,11 @@
-from openai import OpenAI
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import requests
 
 from appointment.models import Appointment
-from appointment.serializers import AppointmentSerializer, AudioUploadSerializer
+from appointment.openai import CustomOpenAI
+from appointment.serializers import AppointmentSerializer
 
 
 class AppointmentView(APIView):
@@ -31,27 +30,23 @@ class AppointmentView(APIView):
 
 
 class AudioIntoTextView(APIView):
+    """
+    텍스트를 요약해주는 API
+    """
     permission_classes = [AllowAny]
+    openai = CustomOpenAI()
 
     def post(self, request, *args, **kwargs):
         try:
-            client = OpenAI()
-            serializer = AudioUploadSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            audio = serializer.validated_data['audio']
-            transcript = client.audio.transcriptions.create(
-                model="whisper-1",
-                file=audio,
-                language="ko",
-                response_format="json"
-            )
-            if transcript:
+            text: str = request.data.get("text")
+            summary = self.openai.get_summary(text)
+            if summary:
                 return Response(
-                    data={"summary": transcript.text},
+                    data={"detail": summary.choices[0].message.content},
                     status=status.HTTP_200_OK
                 )
             else:
-                raise Exception("GPT 오류 발생")
+                raise Exception("OpenAI Error!")
         except Exception as e:
             return Response(
                 data={"detail": str(e)},

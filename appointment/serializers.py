@@ -3,10 +3,6 @@ from rest_framework import serializers
 from appointment.models import Appointment
 
 
-class AudioUploadSerializer(serializers.Serializer):
-    audio = serializers.FileField()
-
-
 class AppointmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Appointment
