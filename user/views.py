@@ -3,9 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from .social import kakao_get_user, naver_get_user,  google_get_user
-from .models import AuthToken, User
-
-
+from .models import AuthToken, SmsAuthCode
+from .serializers import UserSerializer
+from django.contrib.auth import authenticate
 class SocialAuthentication(APIView):
     permission_classes = [AllowAny]
 
@@ -35,10 +35,94 @@ class SocialAuthentication(APIView):
                 data={
                     "token": auth_token.id,
                     "is_new_user": created,
-                    # "user": UserSignInSerializer(user).data
+                    "user": UserSerializer(user).data
                 },
                 status=status.HTTP_200_OK)
         return Response(
             data={
                 "detail": f"Cannot get user information from {provider}"},
             status=status.HTTP_401_UNAUTHORIZED)
+
+
+class UserSignInAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        user = authenticate(
+            request,
+            username=request.data.get("username"),
+            password=request.data.get("password"))
+        if user:
+            auth_token = AuthToken.objects.create(user=user)
+            return Response(
+                data={
+                    "token": auth_token.id,
+                    "user": UserSerializer(user).data
+                },
+                status=status.HTTP_200_OK)
+        return Response(
+            data={
+                "detail": "Invalid username or password"},
+            status=status.HTTP_401_UNAUTHORIZED)
+
+
+class UserSignUpAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            auth_token = AuthToken.objects.create(user=user)
+            return Response(
+                data={
+                    "token": auth_token.id,
+                    "user": UserSerializer(user).data
+                },
+                status=status.HTTP_201_CREATED)
+        return Response(
+            data=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserModifyAPIView(APIView):
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                data=UserSerializer(user).data,
+                status=status.HTTP_200_OK)
+        return Response(
+            data=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST)
+
+
+class SmsAuthAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        phone = request.data.get("phone")
+        code = request.data.get("code")
+        if not code:
+            SmsAuthCode.objects.filter(phone=phone).delete()
+            sms_auth = SmsAuthCode.objects.create(phone=phone)
+            sms_auth.send_code()
+            return Response(
+                data={"detail": "Success"},
+                status=status.HTTP_200_OK)
+        try:
+            sms_auth = SmsAuthCode.objects.get(phone=phone)
+        except SmsAuthCode.DoesNotExist:
+            return Response(
+                data={
+                    "detail": "Invalid phone number"},
+                status=status.HTTP_400_BAD_REQUEST)
+        if sms_auth.validate_code(code):
+            return Response(
+                data={"detail": "Success"},
+                status=status.HTTP_200_OK)
+        return Response(
+            data={"detail": "Invalid code"},
+            status=status.HTTP_400_BAD_REQUEST)
