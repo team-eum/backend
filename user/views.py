@@ -75,39 +75,4 @@ class MyPageView(APIView):
         else:
             return HttpResponse(status=status.HTTP_400_BAD_REQUEST)
 
-class AdminPageView(APIView):
-    # 노인 정보 등록 폼, 노인 및 청년 정보 보내기
-    def get(self, request):
-        # 데이터 보내기
-        junior = User.objects.filter(role="junior").all()
-        senior = User.objects.filter(role="senior").all()
 
-        jun_serializer = UserSerializer(junior, many=True)
-        sen_serializer = UserSerializer(senior, many=True)
-
-        serializer_list = [jun_serializer, sen_serializer]
-
-        content = {
-            "status": 1,
-            "responseCode": status.HTTP_200_OK,
-            "data": serializer_list,
-        }
-        
-        return Response(content)
-
-    def post(self, request, jun_id, sen_id):
-        # 매칭
-        junior = get_object_or_404(User, id=jun_id)
-        senior = get_object_or_404(User, id=sen_id)
-
-        available_date = request.data["date"] # 프론트에서 보내주는 정보명에 따라 달라짐
-        
-        pass
-
-# class AppointmentView(APIView):
-#     # 매칭된 약속 리스트, 일정 [확인] - 매칭
-#     def get(self, request):
-#         pass
-
-#     def post(self, request):
-#         pass
