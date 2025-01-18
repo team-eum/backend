@@ -6,5 +6,5 @@ app_name = "appointment"
 
 urlpatterns = [
     path("", AppointmentView.as_view(), name="appointment_list"),
-    path("summary", TextSummaryView.as_view(), name="summary"),
+    path("summary/<int:id>", TextSummaryView.as_view(), name="summary"),
 ]

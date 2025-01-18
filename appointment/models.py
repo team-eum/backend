@@ -13,7 +13,7 @@ class AppointmentStatus(models.TextChoices):
 
 
 class Appointment(TimeStampedModel):
-    mentor = models.ForeignKey("user.User", null=True, on_delete=models.CASCADE, related_name="appointment_as_mentor")
+    mentor = models.ForeignKey("user.User", null=True, on_delete=models.SET_NULL, related_name="appointment_as_mentor")
     mentee = models.ForeignKey("user.User", null=True, on_delete=models.SET_NULL, related_name="appointment_as_mentee")
     start_date = models.DateTimeField(null=False)  # 시작 시간
     end_date = models.DateTimeField(null=False)  # 끝나는 시간
