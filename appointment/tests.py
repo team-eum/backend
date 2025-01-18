@@ -11,7 +11,7 @@ class UserModelTest(TestCase):
             "birth": date(1990, 1, 1),
             "phone": "010-1234-5678",
             "role": "Senior",
-            "category": ["키오스크 사용법", "은행 앱 사용법"],
+            "category": {"category": ["키오스크 사용법", "은행 앱 사용법"]},
             "available_date": {"2025-01-01 9:00-17:00", "2025-01-11 10:00-16:00"},
             "credit": 10,
         }
@@ -25,7 +25,6 @@ class UserModelTest(TestCase):
             phone=self.user_data["phone"],
             category=self.user_data["category"],
             role=self.user_data["role"],
-            help_categories=self.user_data["category"],
             available_date=self.user_data["available_date"],
             credit=self.user_data["credit"],
         )
@@ -36,7 +35,7 @@ class UserModelTest(TestCase):
         self.assertEqual(user.phone, self.user_data["phone"])
         self.assertEqual(user.category, self.user_data["category"])
         self.assertEqual(user.role, self.user_data["role"])
-        self.assertEqual(user.help_categories, self.user_data["help_categories"])
+        
         self.assertEqual(user.available_date, self.user_data["available_date"])
         self.assertEqual(user.credit, self.user_data["credit"])
 
@@ -65,7 +64,7 @@ class UserModelTest(TestCase):
             username="nocategories",
             name="No Categories User",
         )
-        self.assertEqual(user.help_categories, [])
+        
 
     def test_available_date_json(self):
         """JSONField에 데이터가 저장되는지 테스트"""
