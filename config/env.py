@@ -44,3 +44,7 @@ CUSTOM_DB_OPTIONS = json.loads(
 # CSRF #
 CSRF_TRUSTED_ORIGINS = getenv(
     "CSRF_TRUSTED_ORIGINS", "http://localhost").split(",")
+
+# AI APIs #
+OPENAI_API_KEY = getenv("OPENAI_API_KEY")
+CLAUDE_API_KEY = getenv("CLAUDE_API_KEY")
