@@ -28,6 +28,7 @@ class User(AbstractUser):
     )
     name = models.CharField(max_length=100)
     birth = models.DateField(null=True)
+    area = models.CharField(max_length=100, null=True)
     phone = models.CharField(max_length=20, null=True)
     career = models.CharField(max_length=100, null=True)
     category = models.JSONField(default=list, null=True)

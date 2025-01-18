@@ -123,10 +123,13 @@ class AppointmentViewTest(APITestCase):
         )
         
         # Junior로 로그인
+        print(self.junior)
         self.client.force_authenticate(user=self.junior)
+
         
         # GET 요청
         response = self.client.get(self.appointment_url)
+        print(response.data)
         
         # 응답 데이터 확인
         self.assertEqual(response.status_code, status.HTTP_200_OK)

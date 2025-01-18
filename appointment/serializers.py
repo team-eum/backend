@@ -13,14 +13,25 @@ class MentorSerializer(serializers.ModelSerializer):
         ]
 
 
+class MenteeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "name",
+        ]
+
+
 class AppointmentListSerializer(serializers.ModelSerializer):
     mentor = MentorSerializer()
+    mentee = MenteeSerializer()
 
     class Meta:
         model = Appointment
         fields = [
             "id",
             "mentor",
+            "mentee",
             "start_date",
             "end_date",
             "place",

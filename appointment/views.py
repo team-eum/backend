@@ -15,6 +15,7 @@ from appointment.openai import CustomOpenAI
 from appointment.serializers import *
 
 from user.models import User
+from .openai import CustomOpenAI
 
 
 class AppointmentView(APIView):
@@ -22,6 +23,7 @@ class AppointmentView(APIView):
     Appointment list를 가져올 때 사용하는 API
     """
     permission_classes = [AllowAny]
+    instance = CustomOpenAI()
 
     def get(self, request, *args, **kwargs):
         try:
@@ -56,12 +58,15 @@ class AppointmentView(APIView):
         try:
             user = request.user
             
+            place = self.instance.get_appropriate_location(user.area)
             category = list(user.data.get("category"))  # 멘토든 멘티든 카테고리 얻어와야 함
             pre_appoint = {}  # 임시 약속 데이터 - {카테고리 : ['멘토', '멘티']}
 
             if user.role == "J":  # user 가 주니어인 경우
                 for i in category:
-                    seniors = User.objects.filter(role="J").filter(category__contains=i).all()  # senior 들 받아오기
+                    seniors = User.objects.filter(
+                        Q(role="S") & Q(place=place) & Q(category__contains=i)
+                    )  # senior 들 받아오기
                     pre_appoint[i] = [user, seniors] # 임시 데이터 저장
 
                 # 시간 맞추기
@@ -76,12 +81,15 @@ class AppointmentView(APIView):
                             if jun_start <= sen_start and sen_end <= jun_end:
                                 Appointment.objects.create(mentor=user,
                                                            mentee=j,
+                                                           place=place,
                                                            start_date=max(jun_start, sen_start),
                                                            end_date=min(jun_end, sen_end)   )
 
             else:  # user 가 시니어인 경우
                 for i in category:
-                    juniors = User.objects.filter(role="J").filter(category__contains=i).all()  # senior 들 받아오기
+                    juniors = User.objects.filter(
+                        Q(role="J") & Q(place=place) & Q(category__contains=i)
+                    )   # junior 들 받아오기
                     pre_appoint[i] = [juniors, user] # 임시 데이터 저장
 
                 # 시간 맞추기
@@ -96,12 +104,14 @@ class AppointmentView(APIView):
                             if sen_start <= jun_start and jun_end <= sen_end:
                                 Appointment.objects.create(mentor=j,
                                                            mentee=user,
+                                                           place=place,
                                                            start_date=max(jun_start, sen_start),
                                                            end_date=min(jun_end, sen_end))
 
             # 리스트 형식으로 최종 약속 출력
             return Response("매칭 완료", status=status.HTTP_200_OK)
         except Exception as e:
+            print(str(e))
             return Response(data={"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -161,7 +171,6 @@ class AppointmentDetailView(APIView):
 
 class SummaryView(APIView):
     """
-    GET : 요약된 텍스트가 있는 Appointment만 반환하는 API
     POST : 텍스트를 요약해주는 API
     """
     permission_classes = [AllowAny]
