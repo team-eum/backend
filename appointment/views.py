@@ -34,11 +34,10 @@ class TextSummaryView(APIView):
     텍스트를 요약해주는 API
     """
     permission_classes = [AllowAny]
-    # openai = CustomOpenAI()
+    client = OpenAI()
 
     def post(self, request, *args, **kwargs):
         try:
-            client = OpenAI()
             text: str = request.data.get("text")
             summary = self.client.chat.completions.create(
             model="gpt-4o",
