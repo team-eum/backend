@@ -6,6 +6,8 @@ from .social import kakao_get_user, naver_get_user,  google_get_user
 from .models import AuthToken, SmsAuthCode
 from .serializers import UserSerializer
 from django.contrib.auth import authenticate
+
+
 class SocialAuthentication(APIView):
     permission_classes = [AllowAny]
 
