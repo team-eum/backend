@@ -1,5 +1,3 @@
-import enum
-
 from django.db import models
 from main.models import TimeStampedModel
 

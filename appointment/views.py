@@ -41,7 +41,8 @@ class AppointmentView(APIView):
 
 class TextSummaryView(APIView):
     """
-    텍스트를 요약해주는 API
+    GET : 요약된 텍스트가 있는 Appointment만 반환하는 API
+    POST : 텍스트를 요약해주는 API
     """
     permission_classes = [AllowAny]
     client = CustomOpenAI()

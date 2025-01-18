@@ -6,8 +6,7 @@ from config.settings import OPENAI_API_KEY
 class CustomOpenAI:
 
     def __init__(self):
-        # self.client = OpenAI(api_key=OPENAI_API_KEY)
-        self.client = OpenAI(api_key="temp")
+        self.client = OpenAI(api_key=OPENAI_API_KEY)
 
     def get_summary(self, text) -> ChatCompletion:
         return self.client.chat.completions.create(
