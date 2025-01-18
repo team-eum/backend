@@ -7,6 +7,8 @@ from appointment.models import Appointment
 from appointment.serializers import AppointmentSerializer
 from openai import OpenAI
 
+from config.settings import OPENAI_API_KEY
+
 
 class AppointmentView(APIView):
     """
@@ -34,7 +36,7 @@ class TextSummaryView(APIView):
     텍스트를 요약해주는 API
     """
     permission_classes = [AllowAny]
-    client = OpenAI()
+    client = OpenAI(api_key=OPENAI_API_KEY)
 
     def post(self, request, *args, **kwargs):
         try:
