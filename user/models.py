@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from main.sms import send_sms
 from enum import Enum
 from django.contrib.postgres.fields import ArrayField
+from django.utils import timezone
 
 
 def generate_token():
@@ -22,13 +23,27 @@ class User(AbstractUser):
         ('J', 'Junior'),
         ('A', 'Admin'),
     )
-    username = models.CharField(max_length=100, unique=True)
+    GENDER_CHOICES = (
+        ('M', 'Male'),
+        ('F', 'Female'),
+        # ('O', 'Other'),
+    )
+    name = models.CharField(max_length=100)
     birth = models.DateField(null=True)
     phone = models.CharField(max_length=20, null=True)
-    category = models.JSONField(null=True)
-    role = models.CharField(max_length=100, null=True)
-    available_date = models.JSONField(null=True)
+    career = models.CharField(max_length=100, null=True)
+    category = models.JSONField(default=list, null=True)
+    role = models.CharField(max_length=100, null=True, choices=ROLE_CHOICES)
+    gender = models.CharField(max_length=10, null=True, choices=GENDER_CHOICES)
     credit = models.SmallIntegerField(default=5)
+
+    def save(self, *args, **kwargs):
+        if self.birth:
+            if (self.birth.year - timezone.now().date().year) > 60:
+                self.role = 'S'
+            else:
+                self.role = 'J'
+        super().save(*args, **kwargs)
 
 
 class CreditHistory(TimeStampedModel):
