@@ -29,7 +29,7 @@ class AppointmentView(APIView):
             )
 
 
-class AudioIntoTextView(APIView):
+class TextSummaryView(APIView):
     """
     텍스트를 요약해주는 API
     """
