@@ -155,7 +155,7 @@ class AppointmentView(APIView):
         # 리스트 형식으로 최종 약속 출력
         return Response("매칭 완료", status=status.HTTP_200_OK)
 
-    def post(self, request, jun_id, sen_id):
+    def put(self, request, jun_id, sen_id, appoinment_id):
         # 약속 [확인]
         junior = get_object_or_404(User, id=jun_id)
         senior = get_object_or_404(User, id=sen_id)
@@ -163,10 +163,12 @@ class AppointmentView(APIView):
         start_date = request.data['start_date']
         end_date = request.data['end_date']
          # 프론트에서 보내주는 정보명에 따라 달라짐
-        appointment = Appointment.objects.create(mentor=junior, 
-                                                 mentee=senior, 
-                                                 startdate=start_date, 
-                                                 enddate=end_date)
+        appointment = get_object_or_404(Appointment, id=appoinment_id)
+        appointment.objects.update(status="ACCEPTED")
+
+        mentor = get_object_or_404(User, id=jun_id)
+        mentor.credit += 1
+
         serializer = AppointmentDetailSerializer(appointment).data
         
         return Response(data=serializer, status=status.HTTP_200_OK)
