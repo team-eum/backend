@@ -25,10 +25,7 @@ class AppointmentView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            appointment_status: Optional[str] = kwargs.get("status")
-            appointments: Optional[QuerySet] = None
-            if appointment_status and appointment_status.upper() in AppointmentStatus.choices:
-                appointments: QuerySet = Appointment.objects.filter(status=appointment_status)
+            appointment_status: Optional[str] = kwargs.get("status", None)
 
             # 멘토, 멘티
             # 내 일정 확인하기 ->
@@ -36,7 +33,7 @@ class AppointmentView(APIView):
             # 2. 상대방이 나를 가르쳐야 하는 약속
             # 둘다 보여주어야 한다.
             # role(senior, junior 상관 X)
-            appointments = appointments.filter(
+            appointments = Appointment.objects.filter(status=appointment_status).filter(
                 Q(mentee=request.user) | Q(mentor=request.user)
             ).distinct()
 
