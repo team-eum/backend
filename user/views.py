@@ -162,3 +162,35 @@ class MyPageView(APIView):
                 return HttpResponse(status=status.HTTP_400_BAD_REQUEST)
         else:
             return HttpResponse(status=status.HTTP_400_BAD_REQUEST)
+
+
+class AdminPageView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    # 노인 정보 등록 폼, 노인 및 청년 정보 보내기
+    def get(self, request):
+        # 데이터 보내기
+        junior = User.objects.filter(role="junior").all()
+        senior = User.objects.filter(role="senior").all()
+
+        jun_serializer = UserSerializer(junior, many=True).data
+        sen_serializer = UserSerializer(senior, many=True).data
+
+        serializer_list = [jun_serializer, sen_serializer]
+
+        content = {
+            "status": 1,
+            "responseCode": status.HTTP_200_OK,
+            "data": serializer_list,
+        }
+
+        return Response(content)
+
+    def post(self, request):
+        # 시니어 등록 폼
+        serializer = UserSerializer(request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response("등록 완료", status=status.HTTP_201_CREATED)
+        else:
+            return Response("등록에 실패했습니다. 고객센터에 문의해주십시오", status=status.HTTP_400_BAD_REQUEST)
