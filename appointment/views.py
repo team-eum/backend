@@ -47,7 +47,7 @@ class AudioIntoTextView(APIView):
             )
             if transcript:
                 return Response(
-                    data={"summary": transcript.get("text")},
+                    data={"summary": transcript.text},
                     status=status.HTTP_200_OK
                 )
             else:
