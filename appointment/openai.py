@@ -6,7 +6,8 @@ from config.settings import OPENAI_API_KEY
 class CustomOpenAI:
 
     def __init__(self):
-        self.client = OpenAI(api_key=OPENAI_API_KEY)
+        # self.client = OpenAI(api_key=OPENAI_API_KEY)
+        self.client = OpenAI(api_key="OpenAI API Key: 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")
 
     def get_prompt(self, text):
         return f"""

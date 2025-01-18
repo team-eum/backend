@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import User
+from user.models import User
 from datetime import date
 
 class UserModelTest(TestCase):
@@ -72,7 +72,7 @@ class UserModelTest(TestCase):
         user = User.objects.create(
             username="datesetter",
             name="Date Setter",
-            available_date={"Wednesday": "14:00-18:00"},
+            available_date={"2025-01-11 14:00-18:00"},
         )
         self.assertEqual(user.available_date, {"Wednesday": "14:00-18:00"})
 
