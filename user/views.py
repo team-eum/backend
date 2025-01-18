@@ -5,10 +5,11 @@ from .social import kakao_get_user, naver_get_user, google_get_user
 from .models import SmsAuthCode
 from django.contrib.auth import authenticate
 from .models import AuthToken, User
-from rest_framework.generics import get_object_or_404
-from rest_framework import status, permissions
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from .serializers import UserSerializer
 from django.http import HttpResponse
+import json
 
 
 class SocialAuthentication(APIView):
@@ -134,38 +135,42 @@ class SmsAuthAPIView(APIView):
 
 
 class MyPageView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
+    # permission_classes = [IsAuthenticated]
     # 이름, 사진, 크레딧, 가능 일정 - 수정 및 매칭
 
-    def get(self, request, user_id):
+    def get(self, request):
         # 유저 정보
-        user = get_object_or_404(User, id=user_id)
-        serializer = UserSerializer(user)
-
+        serializer = UserSerializer(request.user)
         context = {
             "profile": serializer.data
         }
 
         return HttpResponse(content=context, status=status.HTTP_200_OK)
 
-    def put(self, request, user_id):
+    def put(self, request):
         # 일정 수정
-        # available_date = request.data # string 형태로 받아온다고 가정
-        user = get_object_or_404(User, id=user_id)
-        if request.user.is_authenticated and user == request.user:
-            # 프론트에서 어떻게 보내주는지에 따라 달라질 듯
-            serializer = UserSerializer(user, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return HttpResponse("유저 정보가 정상적으로 변경되었습니다.", status=status.HTTP_200_OK)
-            else:
-                return HttpResponse(status=status.HTTP_400_BAD_REQUEST)
+        # available_date = {"start_date": asdfasdf, "end_date", asdfasdf}
+        available_date = request.data["available_date"] # Json형태를 띄는 String 타입 받아옴
+        user: User = User.objects.filter(id=request.user.id).first()
+        if user:
+            user.available_date = available_date
+            user.save()
         else:
-            return HttpResponse(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data={"detail": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(
+            data={"detail": "Success"},
+            status=status.HTTP_200_OK
+        )
 
 
 class AdminPageView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [AllowAny]
+    # permission_classes = [IsAdminUser]
 
     # 노인 정보 등록 폼, 노인 및 청년 정보 보내기
     def get(self, request):
@@ -188,9 +193,7 @@ class AdminPageView(APIView):
 
     def post(self, request):
         # 시니어 등록 폼
-        serializer = UserSerializer(request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response("등록 완료", status=status.HTTP_201_CREATED)
-        else:
-            return Response("등록에 실패했습니다. 고객센터에 문의해주십시오", status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(data={"detail": "등록 완료"}, status=status.HTTP_201_CREATED)
