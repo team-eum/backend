@@ -54,3 +54,18 @@ class CustomOpenAI:
             ]
         )
         return response.choices[0].message.content.replace("```markdown", "").replace("```", "").strip()
+
+    def get_appropriate_location(self, location: str) -> str:
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""
+                    Find appropriate location to discuss, such as cafe, office, etc. in {location}
+                    You have to answer in Korean, only address and name of the place
+                    """
+                }
+            ]
+        )
+        return response.choices[0].message.content.strip()
