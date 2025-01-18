@@ -8,4 +8,5 @@ urlpatterns = [
     path('signup', views.UserSignUpAPIView.as_view()),
     path('modify', views.UserModifyAPIView.as_view()),
     path('sms-auth', views.SmsAuthAPIView.as_view()),
+    path('my-info', views.MyPageView.as_view()),
 ]
