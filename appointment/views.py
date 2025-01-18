@@ -36,9 +36,7 @@ class AppointmentView(APIView):
             # 2. 상대방이 나를 가르쳐야 하는 약속
             # 둘다 보여주어야 한다.
             # role(senior, junior 상관 X)
-            appointments = Appointment.objects.filter(
-                Q(mentee=request.user) | Q(mentor=request.user)
-            ).distinct()
+            appointments = Appointment.objects.all()
             # print("get 면담 : ", Appointment.objects.all())
 
             serializer = AppointmentListSerializer(instance=appointments, many=True)
