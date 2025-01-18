@@ -55,7 +55,6 @@ class AppointmentView(APIView):
     # 자동 매칭
         try:
             user = request.user
-            print("post 내부 유저: ", user)
             
             # 매칭 장소 결정
             place = self.instance.get_appropriate_location(user.area)
@@ -84,7 +83,6 @@ class AppointmentDetailView(APIView):
     def get(self, request, *args, **kwargs):
         try:
             summarized_appointments: Appointment = Appointment.objects.filter(
-                mentee=request.user,
                 id=kwargs.get("id")
             ).first()
             serializer = AppointmentDetailSerializer(instance=summarized_appointments)
