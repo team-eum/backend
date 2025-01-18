@@ -31,9 +31,9 @@ class User(AbstractUser):
 
 class CreditHistory(TimeStampedModel):
     credited_user = models.ForeignKey(
-        User, on_delete=models.PROTECT, null=True, blank=True)
+        User, on_delete=models.PROTECT, null=True, blank=True, related_name="credited_user")
     deducted_user = models.ForeignKey(
-        User, on_delete=models.PROTECT, null=True, blank=True)
+        User, on_delete=models.PROTECT, null=True, blank=True, related_name="deducted_user")
     credit = models.PositiveSmallIntegerField(default=0)
     reason = models.CharField(max_length=100, null=True)
     appointment = models.ForeignKey(
