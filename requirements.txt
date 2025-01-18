@@ -21,6 +21,7 @@ httpx==0.28.1
 idna==3.10
 jiter==0.8.2
 jmespath==1.0.1
+mysqlclient==2.2.6
 openai==1.59.8
 packaging==24.2
 pillow==11.1.0
