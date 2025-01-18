@@ -2,7 +2,6 @@ from typing import Optional
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import QuerySet
-from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -76,10 +75,10 @@ class SummaryView(APIView):
     def post(self, request, *args, **kwargs):
         try:
             text: str = request.data.get("text")
-            summary: ChatCompletion = self.client.get_summary(text)
+            summary: str = self.client.get_summary(text)
             if summary:
                 return Response(
-                    data={"detail": summary.choices[0].message.content.strip()},
+                    data={"detail": summary},
                     status=status.HTTP_200_OK
                 )
             else:
