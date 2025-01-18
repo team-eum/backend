@@ -1,14 +1,12 @@
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.views import APIView
-from .social import kakao_get_user, naver_get_user,  google_get_user
-from .models import AuthToken, SmsAuthCode
-from .serializers import UserSerializer
+from .social import kakao_get_user, naver_get_user, google_get_user
+from .models import SmsAuthCode
 from django.contrib.auth import authenticate
 from .models import AuthToken, User
 from rest_framework.generics import get_object_or_404
-from rest_framework import status, permissions, generics
+from rest_framework import status, permissions
 from .serializers import UserSerializer
 from django.http import HttpResponse
 
