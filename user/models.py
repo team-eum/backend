@@ -24,7 +24,7 @@ class User(AbstractUser):
     birth = models.DateField(null=True)
     phone = models.CharField(max_length=20, null=True)
     career = models.CharField(max_length=100, null=True)
-    category = models.CharField(max_length=100, null=True)
+    category = models.JSONField(default=list, null=True)
     role = models.CharField(max_length=100, null=True)
     credit = models.SmallIntegerField(default=5)
 
