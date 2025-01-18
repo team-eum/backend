@@ -20,5 +20,10 @@ class Appointment(TimeStampedModel):
     origin_text = models.TextField(null=True)  # 음석 파일에서 추출한 원본 텍스트 데이터
     summary = models.TextField(null=True)  # 원본 텍스트를 요약한 데이터
 
+    def save_origin_and_summary(self, origin_text: str, summary: str):
+        self.origin_text = origin_text
+        self.summary = summary
+        self.save()
+
     class Meta:
         db_table = "appointment"
