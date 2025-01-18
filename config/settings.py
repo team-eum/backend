@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from . import env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,17 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-c*vsw679el7bfzb!pt97e$fa4xxlrcqfx*(irgi$64-1fe@@9o"
+SECRET_KEY = "6zjo&NN?eG#3n6!Dk7EN9F?cnd@DDJPfztSH#Q8eLy?F$7?aDDEBBKsep@8fR!mBs!ijMFRH9PFH$xpi"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
-INSTALLED_APPS = [
+DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -39,9 +40,21 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 ]
 
+EXTERNAL_APPS = [
+    "rest_framework",
+    "whitenoise.runserver_nostatic",
+    "corsheaders",
+]
+
+INTERNAL_APPS = []
+
+INSTALLED_APPS = INTERNAL_APPS + EXTERNAL_APPS + DJANGO_APPS
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -105,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -121,3 +134,88 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Rest Framework Config
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "config.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticatedOrReadOnly",),
+    "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser", "rest_framework.parsers.MultiPartParser",),
+    # "DEFAULT_PAGINATION_CLASS": "config.pagination.DefaultPagination",
+    "PAGE_SIZE": 10,
+    # "EXCEPTION_HANDLER": "config.exceptions.custom_exception_handler",
+}
+
+
+# ENVIRONMENT VARIABLES #
+# Social Auth
+KAKAO_REST_API_KEY = env.KAKAO_REST_API_KEY
+NAVER_CLIENT_ID = env.NAVER_CLIENT_ID
+NAVER_CLIENT_SECRET = env.NAVER_CLIENT_SECRET
+GOOGLE_CLIENT_ID = env.GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET = env.GOOGLE_CLIENT_SECRET
+
+# Custom Storage
+USE_S3 = env.USE_S3
+AWS_S3_ACCESS_KEY_ID = env.AWS_S3_ACCESS_KEY_ID
+AWS_S3_SECRET_ACCESS_KEY = env.AWS_S3_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = env.AWS_STORAGE_BUCKET_NAME
+AWS_QUERYSTRING_EXPIRE = env.AWS_QUERYSTRING_EXPIRE
+AWS_S3_REGION_NAME = env.AWS_S3_REGION_NAME
+AWS_S3_ENDPOINT_URL = env.AWS_S3_ENDPOINT_URL
+AWS_S3_SIGNATURE_VERSION = env.AWS_S3_SIGNATURE_VERSION
+AWS_STORAGE_BUCKET_NAME = env.AWS_STORAGE_BUCKET_NAME
+AWS_S3_CUSTOM_DOMAIN = env.AWS_S3_CUSTOM_DOMAIN
+
+# Cusom DB
+USE_CUSTOM_DB = env.USE_CUSTOM_DB
+CUSTOM_DB_ENGINE = env.CUSTOM_DB_ENGINE
+CUSTOM_DB_NAME = env.CUSTOM_DB_NAME
+CUSTOM_DB_USER = env.CUSTOM_DB_USER
+CUSTOM_DB_PASSWORD = env.CUSTOM_DB_PASSWORD
+CUSTOM_DB_HOST = env.CUSTOM_DB_HOST
+CUSTOM_DB_PORT = env.CUSTOM_DB_PORT
+CUSTOM_DB_OPTIONS = env.CUSTOM_DB_OPTIONS
+
+# Additional Configurations #
+# Custom Auth Model
+AUTH_USER_MODEL = "user.User"
+
+# Custom Storage Configurations
+if USE_S3:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+
+    }
+
+# Static Files Configurations
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "static"
+
+# Custom DB Configurations
+if USE_CUSTOM_DB:
+    DATABASES = {
+        "default": {
+            "ENGINE": CUSTOM_DB_ENGINE,
+            "NAME": CUSTOM_DB_NAME,
+            "USER": CUSTOM_DB_USER,
+            "PASSWORD": CUSTOM_DB_PASSWORD,
+            "HOST": CUSTOM_DB_HOST,
+            "PORT": CUSTOM_DB_PORT,
+            "OPTIONS": CUSTOM_DB_OPTIONS,
+        }
+    }
+
+# Custom Domain Config (CORS/CSRF)
+# CORS Config
+CORS_ALLOW_ALL_ORIGINS = True
+# CSRF Config
+CSRF_TRUSTED_ORIGINS = env.CSRF_TRUSTED_ORIGINS
