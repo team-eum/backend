@@ -1,13 +1,13 @@
+from django.db.models import QuerySet
+from openai.types.chat.chat_completion import ChatCompletion
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from appointment.models import Appointment
+from appointment.openai import CustomOpenAI
 from appointment.serializers import AppointmentSerializer
-from openai import OpenAI
-
-from config.settings import OPENAI_API_KEY
 
 
 class AppointmentView(APIView):
@@ -18,7 +18,7 @@ class AppointmentView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            appointments = Appointment.objects.filter(mentee=request.user)
+            appointments: QuerySet = Appointment.objects.filter(mentee=request.user)
             serializer = AppointmentSerializer(instance=appointments, many=True)
             return Response(
                 data=serializer.data,
@@ -36,24 +36,12 @@ class TextSummaryView(APIView):
     텍스트를 요약해주는 API
     """
     permission_classes = [AllowAny]
-    client = OpenAI(api_key=OPENAI_API_KEY)
+    client = CustomOpenAI()
 
     def post(self, request, *args, **kwargs):
         try:
             text: str = request.data.get("text")
-            summary = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "user",
-                    "content":
-                        f"""
-                        Summarize this text in Korean.
-                        {str(text)}
-                        """
-                }
-            ]
-        )
+            summary: ChatCompletion = self.client.get_summary(text)
             if summary:
                 return Response(
                     data={"detail": summary.choices[0].message.content},
