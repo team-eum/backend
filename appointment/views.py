@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from appointment.models import Appointment
-from appointment.openai import CustomOpenAI
 from appointment.serializers import AppointmentSerializer
+from openai import OpenAI
 
 
 class AppointmentView(APIView):
@@ -34,12 +34,25 @@ class TextSummaryView(APIView):
     텍스트를 요약해주는 API
     """
     permission_classes = [AllowAny]
-    openai = CustomOpenAI()
+    # openai = CustomOpenAI()
 
     def post(self, request, *args, **kwargs):
         try:
+            client = OpenAI()
             text: str = request.data.get("text")
-            summary = self.openai.get_summary(text)
+            summary = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content":
+                        f"""
+                        Summarize this text in Korean.
+                        {str(text)}
+                        """
+                }
+            ]
+        )
             if summary:
                 return Response(
                     data={"detail": summary.choices[0].message.content},
