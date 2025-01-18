@@ -9,6 +9,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework import status
 from django.db import transaction
 import datetime
+from datetime import datetime
 
 from appointment.models import AppointmentStatus
 from appointment.openai import CustomOpenAI
@@ -27,7 +28,7 @@ class AppointmentView(APIView):
 
     def get(self, request, *args, **kwargs):
         try:
-            appointment_status: Optional[str] = kwargs.get("status", None)
+            # print("get 요청 유저", request.user)
 
             # 멘토, 멘티
             # 내 일정 확인하기 ->
@@ -35,9 +36,10 @@ class AppointmentView(APIView):
             # 2. 상대방이 나를 가르쳐야 하는 약속
             # 둘다 보여주어야 한다.
             # role(senior, junior 상관 X)
-            appointments = Appointment.objects.filter(status=appointment_status).filter(
+            appointments = Appointment.objects.filter(
                 Q(mentee=request.user) | Q(mentor=request.user)
             ).distinct()
+            # print("get 면담 : ", Appointment.objects.all())
 
             serializer = AppointmentListSerializer(instance=appointments, many=True)
             return Response(
@@ -50,66 +52,102 @@ class AppointmentView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    
     def post(self, request):
-        # 자동 매칭
+    # 자동 매칭
         try:
             user = request.user
+            print("post 내부 유저: ", user)
             
+            # 매칭 장소 결정
             place = self.instance.get_appropriate_location(user.area)
-            category = list(user.data.get("category"))  # 멘토든 멘티든 카테고리 얻어와야 함
-            pre_appoint = {}  # 임시 약속 데이터 - {카테고리 : ['멘토', '멘티']}
+            
+            # 유저 카테고리 추출
+            category_list = user.category.get("category", [])  # 카테고리가 없으면 빈 리스트 반환
+            senior = User.objects.filter(
+                        Q(role="S") & Q(area=user.area)
+                    ).first()
+            appointment = Appointment.objects.create(mentor=user, mentee=senior, place=place, status="PENDING")
 
-            if user.role == "J":  # user 가 주니어인 경우
-                for i in category:
-                    seniors = User.objects.filter(
-                        Q(role="S") & Q(place=place) & Q(category__contains=i)
-                    )  # senior 들 받아오기
-                    pre_appoint[i] = [user, seniors] # 임시 데이터 저장
+            context = {
+                "data": appointment.id,
+                "status_code": 200,
+            }
+            
+            return Response(context)
 
-                # 시간 맞추기
-                jun_start = datetime.datetime.strptime(i["start"], '%Y-%m-%d %H:%M:%S')
-                jun_end = datetime.datetime.strptime(i["end"], '%Y-%m-%d %H:%M:%S')
+            # if user.role == "J":  # 유저가 Junior인 경우
+            #     for category in category_list:
+            #         # 동일한 지역과 카테고리를 가진 Senior 조회
+            #         seniors = User.objects.filter(
+            #             Q(role="S") & Q(area=user.area)
+            #         )
+                    
 
-                for i in pre_appoint:
-                    for j in pre_appoint[i][1]: # 멘티 목록
-                        for k in j.available_date:
-                            sen_start = datetime.datetime.strptime(k["start"], '%Y-%m-%d %H:%M:%S')
-                            sen_end = datetime.datetime.strptime(k["end"], '%Y-%m-%d %H:%M:%S')
-                            if jun_start <= sen_start and sen_end <= jun_end:
-                                Appointment.objects.create(mentor=user,
-                                                           mentee=j,
-                                                           place=place,
-                                                           start_date=max(jun_start, sen_start),
-                                                           end_date=min(jun_end, sen_end)   )
+                # Junior의 가용 시간
+                # jun_start = datetime.datetime.strptime(user.available_date.get("start"), '%Y-%m-%d %H:%M:%S')
+                # jun_end = datetime.datetime.strptime(user.available_date.get("end"), '%Y-%m-%d %H:%M:%S')
 
-            else:  # user 가 시니어인 경우
-                for i in category:
-                    juniors = User.objects.filter(
-                        Q(role="J") & Q(place=place) & Q(category__contains=i)
-                    )   # junior 들 받아오기
-                    pre_appoint[i] = [juniors, user] # 임시 데이터 저장
+                # 시간 매칭 및 Appointment 생성
+            #     for category, data in pre_appoint.items():
+            #         junior = data[0]
+            #         senior_list = data[1]
 
-                # 시간 맞추기
-                sen_start = datetime.datetime.strptime(i["start"], '%Y-%m-%d %H:%M:%S')
-                sen_end = datetime.datetime.strptime(i["end"], '%Y-%m-%d %H:%M:%S')
+            #         for senior in senior_list:
+            #             # Senior의 가용 시간 확인
+            #             print(senior.available_date.get("start"))
+            #             senior_start = datetime.datetime.strptime(senior.available_date.get("start"), '%Y-%m-%d %H:%M:%S')
+            #             senior_end = datetime.datetime.strptime(senior.available_date.get("end"), '%Y-%m-%d %H:%M:%S')
 
-                for i in pre_appoint:
-                    for j in pre_appoint[i][1]: # 멘티 목록
-                        for k in j.available_date:
-                            jun_start = datetime.datetime.strptime(k["start"], '%Y-%m-%d %H:%M:%S')
-                            jun_end = datetime.datetime.strptime(k["end"], '%Y-%m-%d %H:%M:%S')
-                            if sen_start <= jun_start and jun_end <= sen_end:
-                                Appointment.objects.create(mentor=j,
-                                                           mentee=user,
-                                                           place=place,
-                                                           start_date=max(jun_start, sen_start),
-                                                           end_date=min(jun_end, sen_end))
+            #             # 시간이 겹치는 경우 Appointment 생성
+            #             if jun_start <= senior_start and senior_end <= jun_end:
+            #                 Appointment.objects.create(
+            #                     mentor=senior,
+            #                     mentee=junior,
+            #                     place=place,
+            #                     start_date=max(jun_start, senior_start),
+            #                     end_date=min(jun_end, senior_end)
+            #                 )
+            #                 print(f"Appointment 생성 - Mentor: {senior}, Mentee: {junior}, 장소: {place}")
+            # else:
+            #     for category in category_list:
+            #         # 동일한 지역과 카테고리를 가진 Senior 조회
+            #         juniors = User.objects.filter(
+            #             Q(role="J") & Q(area=user.area)
+            #         )
+            #         print(f"카테고리 '{category}'의 주니어 목록: ", seniors)
 
-            # 리스트 형식으로 최종 약속 출력
-            return Response("매칭 완료", status=status.HTTP_200_OK)
+            #         pre_appoint[category] = [user, list(juniors)]  # Junior와 Senior 목록 저장
+
+            #     # Junior의 가용 시간
+            #     sen_start = datetime.strptime(user.available_date.get("start"), '%Y-%m-%d %H:%M:%S')
+            #     sen_end = datetime.strptime(user.available_date.get("end"), '%Y-%m-%d %H:%M:%S')
+
+            #     # 시간 매칭 및 Appointment 생성
+            #     for category, data in pre_appoint.items():
+            #         senior = data[0]
+            #         junior_list = data[1]
+
+            #         for junior in junior_list:
+            #             # Senior의 가용 시간 확인
+            #             juior_start = datetime.strptime(senior.available_date.get("start"), '%Y-%m-%d %H:%M:%S')
+            #             junior_end = datetime.strptime(senior.available_date.get("end"), '%Y-%m-%d %H:%M:%S')
+
+            #             # 시간이 겹치는 경우 Appointment 생성
+            #             if jun_start <= senior_start and senior_end <= jun_end:
+            #                 Appointment.objects.create(
+            #                     mentor=senior,
+            #                     mentee=junior,
+            #                     place=place,
+            #                     start_date=max(jun_start, senior_start),
+            #                     end_date=min(jun_end, senior_end)
+            #                 )
+            #                 print(f"Appointment 생성 - Mentor: {junior}, Mentee: {senior}, 장소: {place}")
+
+            return Response({"message": "매칭이 완료되었습니다."}, status=status.HTTP_200_OK)
+
         except Exception as e:
-            print(str(e))
-            return Response(data={"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AppointmentDetailView(APIView):
