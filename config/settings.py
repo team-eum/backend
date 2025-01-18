@@ -46,7 +46,7 @@ EXTERNAL_APPS = [
     "corsheaders",
 ]
 
-INTERNAL_APPS = []
+INTERNAL_APPS = ["main", "user"]
 
 INSTALLED_APPS = INTERNAL_APPS + EXTERNAL_APPS + DJANGO_APPS
 
@@ -182,7 +182,7 @@ CUSTOM_DB_OPTIONS = env.CUSTOM_DB_OPTIONS
 
 # Additional Configurations #
 # Custom Auth Model
-# AUTH_USER_MODEL = "user.User"
+AUTH_USER_MODEL = "user.User"
 
 # Custom Storage Configurations
 if USE_S3:
@@ -219,3 +219,7 @@ if USE_CUSTOM_DB:
 CORS_ALLOW_ALL_ORIGINS = True
 # CSRF Config
 CSRF_TRUSTED_ORIGINS = env.CSRF_TRUSTED_ORIGINS
+
+# AI APIs
+OPENAI_API_KEY = env.OPENAI_API_KEY
+CLAUDE_API_KEY = env.CLAUDE_API_KEY

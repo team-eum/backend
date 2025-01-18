@@ -1,9 +1,6 @@
 from os import getenv
 import json
 
-PORTONE_V1_API_KET = getenv('PORTONE_V1_API_KET')
-PORTONE_V1_API_SECRET = getenv('PORTONE_V1_API_SECRET')
-
 # Social Auth #
 KAKAO_REST_API_KEY = getenv('KAKAO_REST_API_KEY')
 NAVER_CLIENT_ID = getenv('NAVER_CLIENT_ID')
@@ -47,3 +44,7 @@ CUSTOM_DB_OPTIONS = json.loads(
 # CSRF #
 CSRF_TRUSTED_ORIGINS = getenv(
     "CSRF_TRUSTED_ORIGINS", "http://localhost").split(",")
+
+# AI APIs #
+OPENAI_API_KEY = getenv("OPENAI_API_KEY")
+CLAUDE_API_KEY = getenv("CLAUDE_API_KEY")
