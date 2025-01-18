@@ -10,7 +10,7 @@ from user.models import User
 
 from appointment.models import Appointment, AppointmentStatus
 from appointment.openai import CustomOpenAI
-from appointment.serializers import AppointmentSerializer, TextSummarySerializer, MentorSerializer
+from appointment.serializers import *
 
 
 class AppointmentListView(APIView):
@@ -24,13 +24,40 @@ class AppointmentListView(APIView):
             appointment_status: Optional[str] = kwargs.get("status")
             if appointment_status and appointment_status.upper() in AppointmentStatus.choices:
                 appointments: QuerySet = Appointment.objects.filter(mentee=request.user, status=appointment_status)
-                serializer = AppointmentSerializer(instance=appointments, many=True)
+                serializer = AppointmentListSerializer(instance=appointments, many=True)
             else:
                 appointments: QuerySet = Appointment.objects.filter(mentee=request.user)
-                serializer = AppointmentSerializer(instance=appointments, many=True)
+                serializer = AppointmentListSerializer(instance=appointments, many=True)
             return Response(
                 data=serializer.data,
                 status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                data={"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class AppointmentDetailView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            summarized_appointments: Appointment = Appointment.objects.filter(
+                mentee=request.user,
+                id=kwargs.get("id")
+            ).first()
+            serializer = AppointmentDetailSerializer(instance=summarized_appointments)
+            return Response(
+                data=serializer.data,
+                status=status.HTTP_200_OK
+            )
+        except ObjectDoesNotExist as e:
+            return Response(
+                data={"detail": str(e)},
+                status=status.HTTP_204_NO_CONTENT
             )
         except Exception as e:
             return Response(
@@ -46,31 +73,6 @@ class SummaryView(APIView):
     """
     permission_classes = [AllowAny]
     client = CustomOpenAI()
-
-    def get(self, request, *args, **kwargs):
-        try:
-            summarized_appointments: Appointment = Appointment.objects.filter(
-                mentee=request.user,
-                id=kwargs.get("id"),
-                summary__isnull=False
-            ).first()
-            if not summarized_appointments:
-                raise ObjectDoesNotExist("해당 약속은 아직 요약 정보가 생성되지 않았습니다.")
-            serializer = TextSummarySerializer(instance=summarized_appointments)
-            return Response(
-                data=serializer.data,
-                status=status.HTTP_200_OK
-            )
-        except ObjectDoesNotExist as e:
-            return Response(
-                data={"detail": str(e)},
-                status=status.HTTP_204_NO_CONTENT
-            )
-        except Exception as e:
-            return Response(
-                data={"detail": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
 
     def post(self, request, *args, **kwargs):
         try:
@@ -134,7 +136,7 @@ class MentorMenteeListView(APIView):
             appointments: QuerySet = Appointment.objects.filter(mentee=request.user, mentor_id=mentor_id)
             if not appointments:
                 raise ObjectDoesNotExist("해당 약속은 아직 멘토와 본인이 진행하지 않습니다.")
-            serializer = AppointmentSerializer(instance=appointments, many=True)
+            serializer = AppointmentListSerializer(instance=appointments, many=True)
             return Response(
                 data=serializer.data,
                 status=status.HTTP_200_OK

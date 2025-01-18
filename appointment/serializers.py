@@ -4,7 +4,33 @@ from appointment.models import Appointment
 from user.models import User
 
 
-class AppointmentSerializer(serializers.ModelSerializer):
+class MentorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "name",
+        ]
+
+
+class AppointmentListSerializer(serializers.ModelSerializer):
+    mentor = MentorSerializer()
+
+    class Meta:
+        model = Appointment
+        fields = [
+            "id",
+            "mentor",
+            "start_date",
+            "end_date",
+            "place",
+            "status"
+        ]
+
+
+class AppointmentDetailSerializer(serializers.ModelSerializer):
+    mentor = MentorSerializer()
+
     class Meta:
         model = Appointment
         fields = [
@@ -14,16 +40,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "end_date",
             "place",
             "status",
-        ]
-        depth = 1
-
-
-class MentorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "name",
+            "origin_text",
+            "summary"
         ]
 
 
