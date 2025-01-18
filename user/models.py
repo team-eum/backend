@@ -4,6 +4,8 @@ from django.contrib.auth.models import AbstractUser
 import secrets
 from django.core.exceptions import ValidationError
 from main.sms import send_sms
+from enum import Enum
+from django.contrib.postgres.fields import ArrayField
 
 
 def generate_token():
@@ -20,12 +22,12 @@ class User(AbstractUser):
         ('J', 'Junior'),
         ('A', 'Admin'),
     )
-    name = models.CharField(max_length=100)
+    username = models.CharField(max_length=100, unique=True)
     birth = models.DateField(null=True)
     phone = models.CharField(max_length=20, null=True)
-    career = models.CharField(max_length=100, null=True)
-    category = models.CharField(max_length=100, null=True)
+    category = models.JSONField(null=True)
     role = models.CharField(max_length=100, null=True)
+    available_date = models.JSONField(null=True)
     credit = models.SmallIntegerField(default=5)
 
 
@@ -36,7 +38,6 @@ class CreditHistory(TimeStampedModel):
         User, on_delete=models.PROTECT, null=True, blank=True, related_name="deducted_user")
     credit = models.PositiveSmallIntegerField(default=0)
     reason = models.CharField(max_length=100, null=True)
-    available_date = models.CharField(max_length=1000, null=True)
     appointment = models.ForeignKey(
         "appointment.Appointment", on_delete=models.PROTECT, null=True, blank=True)
 

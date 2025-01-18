@@ -126,8 +126,6 @@ class AppointmentView(APIView):
 
     def post(self, request, user_id):
         # 자동 매칭
-        # start : 2024-01-11 15:30,
-        # end : 2024-01-11 16:30
         user = get_object_or_404(id=user_id)
         category = list(user["category"]) # 멘토든 멘티든 카테고리 얻어와야 함
         pre_appoint = {} # 임시 약속 데이터 - {카테고리 : ['멘토', '멘티']}
@@ -138,30 +136,31 @@ class AppointmentView(APIView):
                 pre_appoint[i] = [user, seniors]
 
             # 시간 맞추기
-            start_date = i["start"][:11].strftime('%Y-%m-%d')
-            end_date = i["end"][:11].strftime('%Y-%m-%d')
-            start_time = i[12:].strftime('%H:%M')
-            end_time = i[12:].strftime('%H:%M')
+            jun_start = datetime.datetime.strptime(i["start"], '%Y-%m-%d %H:%M:%S')
+            jun_end = datetime.datetime.strptime(i["end"], '%Y-%m-%d %H:%M:%S')
             
-            for i in request.data:
-                for j in seniors:
-                    for k in seniors.date:
-                        pass
+            for i in pre_appoint:
+                for j in pre_appoint[i][1]:
+                    for k in j.available_date:
+                        sen_start = datetime.datetime.strptime(k["start"], '%Y-%m-%d %H:%M:%S')
+                        sen_end = datetime.datetime.strptime(k["end"], '%Y-%m-%d %H:%M:%S')
+                        if jun_start <= sen_start and sen_end <= jun_end:
+                            Appointment.objects.create(mentor=user, 
+                                                       mentee=j, 
+                                                       start_date=max(jun_start, sen_start) , 
+                                                       end_date=min(jun_end, sen_end))
                     
-
-                
 
         else: # user 가 시니어인 경우
             for i in category: # 배우고 싶은 필드에 맞는 멘토 필터링
                 juniors = User.objects.filter(role="senior").filter(category__contains=i).all()
                 pre_appoint[i] = [juniors, user]
             
-        # 시간 맞추기
+            # 시간 맞추기
 
 
         # 리스트 형식으로 최종 약속 출력
-
-        return Response()
+        return Response("매칭 완료", status=status.HTTP_200_OK)
 
     def post(self, request, jun_id, sen_id):
         # 약속 [확인]
