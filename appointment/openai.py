@@ -7,7 +7,8 @@ class CustomOpenAI:
 
     def __init__(self):
         self.client = OpenAI(api_key=OPENAI_API_KEY)
-
+        
+        
     def get_prompt(self, text):
         return f"""
         Summarize the provided transcript in Korean, focusing solely on the answers given by the mentor. 
@@ -53,3 +54,18 @@ class CustomOpenAI:
             ]
         )
         return response.choices[0].message.content.replace("```markdown", "").replace("```", "").strip()
+
+    def get_appropriate_location(self, location: str) -> str:
+        response = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""
+                    Find only one appropriate location to discuss, such as cafe, office, etc. in {location}
+                    You have to answer in Korean, the answer contains only address and name of the place
+                    """
+                }
+            ]
+        )
+        return response.choices[0].message.content.strip()

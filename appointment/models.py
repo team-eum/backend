@@ -13,8 +13,8 @@ class AppointmentStatus(models.TextChoices):
 class Appointment(TimeStampedModel):
     mentor = models.ForeignKey("user.User", null=True, on_delete=models.SET_NULL, related_name="appointment_as_mentor")
     mentee = models.ForeignKey("user.User", null=True, on_delete=models.SET_NULL, related_name="appointment_as_mentee")
-    start_date = models.DateTimeField(null=False)  # 시작 시간
-    end_date = models.DateTimeField(null=False)  # 끝나는 시간
+    start_date = models.DateTimeField(null=True, default='2025-01-19 00:00:00')  # 시작 시간
+    end_date = models.DateTimeField(null=True, default='2025-01-19 00:00:00')  # 끝나는 시간
     place = models.CharField(max_length=255)  # 약속 위치
     status = models.CharField(choices=AppointmentStatus.choices, max_length=100)  # 약속 상태
     origin_text = models.TextField(null=True)  # 음석 파일에서 추출한 원본 텍스트 데이터

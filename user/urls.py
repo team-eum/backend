@@ -9,4 +9,5 @@ urlpatterns = [
     path('modify', views.UserModifyAPIView.as_view()),
     path('sms-auth', views.SmsAuthAPIView.as_view()),
     path('my-info', views.MyPageView.as_view()),
+    path('admin', views.AdminPageView.as_view()),
 ]
