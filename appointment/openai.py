@@ -52,6 +52,4 @@ class CustomOpenAI:
                 }
             ]
         )
-        return response.choices[0].message.content
-
-
+        return response.choices[0].message.content.replace("```markdown", "").replace("```", "").strip()

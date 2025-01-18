@@ -74,15 +74,26 @@ class SummaryView(APIView):
 
     def post(self, request, *args, **kwargs):
         try:
+            appointment: Appointment = Appointment.objects.filter(id=kwargs.get("id")).first()
+            if not appointment:
+                raise ObjectDoesNotExist("해당 약속은 아직 만들어지지 않았습니다.")
+
             text: str = request.data.get("text")
-            summary: str = self.client.get_summary(text)
+            summary: str = self.client.get_summary(text)  # OpenAI 호출
+
             if summary:
+                appointment.save_origin_and_summary(text, summary)
                 return Response(
-                    data={"detail": summary},
+                    data={"summary": summary},
                     status=status.HTTP_200_OK
                 )
             else:
                 raise Exception("OpenAI Error!")
+        except ObjectDoesNotExist as e:
+            return Response(
+                data={"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except Exception as e:
             return Response(
                 data={"detail": str(e)},
@@ -95,7 +106,7 @@ class MentorListView(APIView):
 
     def get(self, request, *args, **kwargs):
         """
-        request.user (Mentee)가 진행했던 Appointment의 Mentor 리스트를 반환하는 API
+        request.user (Mentee)가 진행했던 Appointment의 Mentor 정보(id, name) 리스트를 반환하는 API
         """
         try:
             mentors: User = User.objects.filter(appointment_as_mentor__mentee=request.user).distinct()
@@ -116,7 +127,7 @@ class MentorMenteeListView(APIView):
 
     def get(self, request, *args, **kwargs):
         """
-        mentor의 user id가 주어진 경우, 멘토와 본인이 진행한 모든 Appointment의 리스트를 반환하는 API
+        mentor의 user id가 주어진 경우, 멘토와 본인이 진행한 모든 Appointment 리스트를 반환하는 API
         """
         try:
             mentor_id: int = kwargs.get("mentor_id")
