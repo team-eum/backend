@@ -69,7 +69,8 @@ class AppointmentDetailView(APIView):
                 data={"detail": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
+
 class AdminPageView(APIView):
     permission_classes = [permissions.IsAdminUser]
     # 노인 정보 등록 폼, 노인 및 청년 정보 보내기
@@ -102,6 +103,8 @@ class AdminPageView(APIView):
         
 
 class AppointmentView(APIView):
+    permission_classes = [AllowAny]
+
     # 매칭된 약속 리스트, 일정 [확인] - 매칭
     def get(self, request, user_id):
         # 약속 리스트
@@ -114,7 +117,6 @@ class AppointmentView(APIView):
         appoint_list = AppointmentSerializer(appoinments, many=True).data
         
         return Response(data=appoint_list, status=status.HTTP_200_OK)
-    
 
     def post(self, request, user_id):
         # 자동 매칭
@@ -122,9 +124,9 @@ class AppointmentView(APIView):
         # end : 2024-01-11 16:30
         user = get_object_or_404(id=user_id)
         category = list(user["category"]) # 멘토든 멘티든 카테고리 얻어와야 함
-        pre_appoint = {} # 임시 약속 데이터 - {카테고리 : ['멘토', '멘티']}
+        pre_appoint = {}  # 임시 약속 데이터 - {카테고리 : ['멘토', '멘티']}
 
-        if user["role"] == "junior": # user 가 주니어인 경우
+        if user["role"] == "junior":  # user 가 주니어인 경우
             for i in category:
                 seniors = User.objects.filter(role="junior").filter(category__contains=i).all() # senior 들 받아오기
                 pre_appoint[i] = [user, seniors]
@@ -139,17 +141,13 @@ class AppointmentView(APIView):
                 for j in seniors:
                     for k in seniors.date:
                         pass
-                    
 
-                
-
-        else: # user 가 시니어인 경우
-            for i in category: # 배우고 싶은 필드에 맞는 멘토 필터링
+        else:  # user 가 시니어인 경우
+            for i in category:  # 배우고 싶은 필드에 맞는 멘토 필터링
                 juniors = User.objects.filter(role="senior").filter(category__contains=i).all()
                 pre_appoint[i] = [juniors, user]
             
         # 시간 맞추기
-
 
         # 리스트 형식으로 최종 약속 출력
 
@@ -162,7 +160,7 @@ class AppointmentView(APIView):
 
         start_date = request.data['start_date']
         end_date = request.data['end_date']
-         # 프론트에서 보내주는 정보명에 따라 달라짐
+        # 프론트에서 보내주는 정보명에 따라 달라짐
         appointment = Appointment.objects.create(mentor=junior, 
                                                  mentee=senior, 
                                                  startdate=start_date, 
@@ -171,7 +169,6 @@ class AppointmentView(APIView):
         
         return Response(data=serializer, status=status.HTTP_200_OK)
         
-
 
 class SummaryView(APIView):
     """
